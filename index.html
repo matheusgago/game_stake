@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Snake Battle ULTRA - 2D Multiplayer</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Modal de Entrada / Customização -->
+  <div id="joinModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="logo-badge">ULTRA EDITION</div>
+      <h1 class="game-title">SNAKE BATTLE</h1>
+      <p class="subtitle">Arena 2D Multiplayer • Power-ups • Portais • Bots</p>
+
+      <form id="joinForm">
+        <div class="form-group">
+          <label for="playerName">Seu Nickname:</label>
+          <input type="text" id="playerName" maxlength="12" placeholder="Digite seu nome..." required
+            autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label>Escolha a cor da sua Cobra:</label>
+          <div class="color-palette" id="colorPicker">
+            <!-- Gerado dinamicamente -->
+          </div>
+        </div>
+
+        <button type="submit" class="btn-play">
+          <span>ENTRAR NA BATALHA</span>
+          <div class="btn-glow"></div>
+        </button>
+      </form>
+
+      <div class="instructions-card">
+        <h3>🎮 Dicas de Combate:</h3>
+        <p>• <strong>W, A, S, D</strong> ou <strong>Setas</strong>: Direção | <strong>Espaço</strong>: Turbo</p>
+        <p>• 🛡️ <strong>Escudo</strong> absorve 1 impacto mortal</p>
+        <p>• 🧲 <strong>Ímã</strong> atrai frutas próximas</p>
+        <p>• 🌀 <strong>Portais</strong> conectam lados opostos da arena</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interface Principal do Jogo -->
+  <div class="game-container" id="gameScreen">
+
+    <!-- Barra Superior de Estatísticas e Controles de Som -->
+    <header class="stats-bar">
+      <div class="stat-box">
+        <span class="stat-label">PONTOS</span>
+        <span class="stat-value" id="myScore">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">TAMANHO</span>
+        <span class="stat-value" id="myLength">12</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">KILLS</span>
+        <span class="stat-value text-red" id="myKills">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">PING</span>
+        <span class="stat-value text-green" id="pingValue">-- ms</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">FPS</span>
+        <span class="stat-value" id="fpsValue">60</span>
+      </div>
+
+      <!-- Barra de Buffs / Power-ups Ativos -->
+      <div class="active-buffs" id="activeBuffs">
+        <!-- Renderizado dinamicamente quando ativo -->
+      </div>
+
+      <div class="audio-controls">
+        <button id="musicToggle" class="btn-icon" title="Ligar/Desligar Música Synthwave">
+          🎵
+        </button>
+        <button id="soundToggle" class="btn-icon" title="Ligar/Desligar Efeitos Sonoros">
+          🔊
+        </button>
+      </div>
+    </header>
+
+    <!-- Layout da Arena -->
+    <main class="arena-layout">
+
+      <!-- Canvas Wrapper com suporte a Screen Shake -->
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <canvas id="gameCanvas" width="1100" height="700"></canvas>
+
+        <!-- Feed de Notificações / Kills -->
+        <div id="noticeFeed" class="notice-feed"></div>
+
+        <!-- Tela de Morte / Respawn -->
+        <div id="deathScreen" class="death-screen hidden">
+          <h2>VOCÊ FOI ELIMINADO!</h2>
+          <p id="deathCause">Colisão fatal</p>
+          <div class="respawn-loader">Renasce em instantes...</div>
+        </div>
+      </div>
+
+      <!-- Placar Lateral (Leaderboard) -->
+      <aside class="leaderboard-panel">
+        <div class="panel-header">
+          <h3>👑 RANKING GLOBAL</h3>
+        </div>
+        <div id="scoreboard" class="leaderboard-list">
+          <!-- Renderizado via client.js -->
+        </div>
+
+        <div class="legend-panel">
+          <h4>Itens Especiais</h4>
+          <div class="legend-item"><span class="legend-dot" style="background: #00B0FF;"></span> 🛡️ Escudo Protetor
+          </div>
+          <div class="legend-item"><span class="legend-dot" style="background: #FFD600;"></span> 🧲 Ímã de Frutas</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #E040FB;"></span> 👻 Fantasma (Invisível)
+          </div>
+          <div class="legend-item"><span class="legend-dot" style="background: #00E676;"></span> ⚡ Super Velocidade
+          </div>
+          <div class="legend-item"><span class="legend-dot" style="background: #00E5FF;"></span> 🌀 Portal de
+            Teletransporte</div>
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- Controles Touch para Mobile / Tablet -->
+    <div class="mobile-controls" id="touchControls">
+      <div class="dpad">
+        <button class="dpad-btn up" data-dir="up">▲</button>
+        <div class="dpad-middle">
+          <button class="dpad-btn left" data-dir="left">◀</button>
+          <button class="dpad-btn right" data-dir="right">▶</button>
+        </div>
+        <button class="dpad-btn down" data-dir="down">▼</button>
+      </div>
+      <button class="btn-boost" id="btnTouchBoost">⚡ TURBO</button>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+
+</html>
